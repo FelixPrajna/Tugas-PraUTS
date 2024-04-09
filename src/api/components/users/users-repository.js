@@ -33,6 +33,16 @@ async function createUser(name, email, password) {
 }
 
 /**
+ * Check existing email
+ * @param {string} email - Email
+ * @returns {Promise}
+ */
+async function checkEmail(email) {
+  const existingUser = await User.findOne({ email });
+  return existingUser;
+}
+
+/**
  * Update existing user
  * @param {string} id - User ID
  * @param {string} name - Name
@@ -68,4 +78,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  checkEmail,
 };

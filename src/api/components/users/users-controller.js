@@ -118,12 +118,50 @@ async function updateUser(request, response, next) {
 }
 
 /**
- * Handle update password request
+ * Handle change password request
  * @param {object} request - Express request object
  * @param {object} response - Express response object
  * @param {object} next - Express route middlewares
  * @returns {object} Response object or pass an error to the next route
  */
+async function changePassword(request, response, next) {
+  try {
+    const id = request.params.id;
+    const oldPassword = request.body.oldPassword;
+    const newPassword = request.body.newPassword;
+    const confirmPassword = request.body.confirmPassword;
+
+    if (newPassword.length < 6 || newPassword.length > 32) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'Password length must be between 6 and 32 characters'
+      );
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'New password and confirmation do not match'
+      );
+    }
+
+    const success = await usersService.changePassword(
+      id,
+      oldPassword,
+      newPassword
+    );
+    if (!success) {
+      throw errorResponder(
+        errorTypes.UNPROCESSABLE_ENTITY,
+        'Failed to change password'
+      );
+    }
+
+    return response.status(200).json({ id });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 /**
  * Handle delete user request
@@ -155,5 +193,6 @@ module.exports = {
   getUser,
   createUser,
   updateUser,
+  changePassword,
   deleteUser,
 };

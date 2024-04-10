@@ -97,12 +97,37 @@ async function updateUser(id, name, email) {
 }
 
 /**
- * Update existing user
+ * Change user's password
  * @param {string} id - User ID
- * @param {string} password - Password
- * @param {string} email - Email
+ * @param {string} oldPassword - Old password
+ * @param {string} newPassword - New password
  * @returns {boolean}
  */
+async function changePassword(id, oldPassword, newPassword) {
+  const user = await usersRepository.getUser(id);
+
+  // User not found
+  if (!user) {
+    return null;
+  }
+
+  // Check if old password matches
+  const isMatch = await comparePasswords(oldPassword, user.password);
+  if (!isMatch) {
+    return false; // Old password does not match
+  }
+
+  // Hash new password
+  const hashedNewPassword = await hashPassword(newPassword);
+
+  try {
+    await usersRepository.updatePassword(id, hashedNewPassword);
+  } catch (err) {
+    return null;
+  }
+
+  return true;
+}
 
 /**
  * Delete user
@@ -126,6 +151,18 @@ async function deleteUser(id) {
   return true;
 }
 
+const bcrypt = require('bcrypt');
+
+/**
+ * Compare passwords
+ * @param {string} password - Password to compare
+ * @param {string} hashedPassword - Hashed password to compare against
+ * @returns {boolean} - Returns true if passwords match, false otherwise
+ */
+async function comparePasswords(password, hashedPassword) {
+  return await bcrypt.compare(password, hashedPassword);
+}
+
 module.exports = {
   getUsers,
   getUser,
@@ -133,4 +170,6 @@ module.exports = {
   updateUser,
   deleteUser,
   checkEmailTaken,
+  changePassword,
+  comparePasswords,
 };
